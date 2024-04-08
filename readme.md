@@ -2,7 +2,7 @@
 
 # Introduction
 
-Hello! Thanks for taking our hiring challenge. This challenge will be used to assess your coding skills across the entire stack (frontend, backend, SQL, and data modeling). Plan to spend around 2-3 hours on the challenge, and please don't spend more; make sure you plan your time accordingly and prioritize the right things based on the requirements listed below.
+Hello! Thanks for taking our hiring challenge. This challenge will be used to assess your coding skills across the entire stack (frontend, backend, SQL, and data modeling). Plan to spend around 3-4 hours on the challenge, if you are not done after 4 hours feel free to hand in WIP; make sure you plan your time accordingly and prioritize the right things based on the requirements listed below.
 
 # Task
 
@@ -101,7 +101,7 @@ You can run any migrations using the `npm run drizzle:migrate` command.
 
 ### Processing API
 
-The processing API, accessible at the `PROCESSING_API_ENDPOINT` environment variable, takes a JSON object with the ID of the document being processed. Assume it's stateless and will arbitrarily take the same ID multiple times, and assume that the endpoint will be available and respond with a 200 status for all valid requests.
+The processing API, accessible at the `PROCESSING_API_ENDPOINT` environment variable, takes a JSON object with the ID of the document being processed. Assume it's stateless and will arbitrarily take the same ID multiple times, and assume that the endpoint will be available and respond with a 200 status for all valid requests. You do not have to actually implement a processing API. Feel free to mock the endpoint for testing purposes with a simple setTimeout() and a randomized response within the spec.
 
 The processing API will err if you give it any other information besides the ID.
 
