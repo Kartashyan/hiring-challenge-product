@@ -1,4 +1,4 @@
-# Cleary hiring challenge
+# REMATIQ / Cleary hiring challenge
 
 # Introduction
 
