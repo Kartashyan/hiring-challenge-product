@@ -5,13 +5,16 @@ import { Content, Header } from 'antd/es/layout/layout';
 import { StrictMode } from "react";
 import reactDOM from "react-dom/client";
 import { createBrowserRouter, Link, Outlet, RouterProvider } from 'react-router-dom';
+import { UploadPDF, action as uploadPDFAction} from './components/UploadPDF';
 
 
 const router = createBrowserRouter([
   {
     path: '/',
     element: <App />,
-    children: [],
+    children: [
+      { path: '/upload', element: <UploadPDF />, action: uploadPDFAction },
+    ],
   },
 ]);
 
