@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { DocumentKind } from "../domain/document-kind.value-object";
-import { Document } from "../domain/document.aggregate";
+import { Document, DocumentStatus } from "../domain/document.aggregate";
 import { Metadata } from "../domain/metadata.value-object";
 import { DocumentRepository } from "./document-repository.port";
 import { DocumentService } from "./document.service";
@@ -157,4 +157,68 @@ describe('DocumentService', () => {
             expect(result).toEqual(fail('An error occurred while updating the document metadata.'));
         });
     });
+    
+    describe('markAsProcessed', () => {
+        it('should successfully mark a document as processed', async () => {
+          const documentId = new UID();
+          const existingDocument = Document.create({
+            metadata: null,
+            uploadedAt: new Date(),
+            updatedAt: new Date(),
+            filePath: 'path/to/existing/document',
+          }, documentId);
+      
+          mockDocumentRepository.findById = vi.fn().mockResolvedValue(existingDocument);
+      
+          const result = await documentService.markAsProcessed(documentId.value);
+      
+          expect(result).toEqual(ok(undefined));
+          expect(existingDocument.status).toEqual(DocumentStatus.PROCESSED);
+          expect(mockDocumentRepository.save).toHaveBeenCalledWith(existingDocument);
+        });
+      
+        it('should return "Document not found." if the document does not exist', async () => {
+          const documentId = 'non-existent-document-id';
+      
+          mockDocumentRepository.findById = vi.fn().mockResolvedValue(null);
+      
+          const result = await documentService.markAsProcessed(documentId);
+      
+          expect(result).toEqual(fail('Document not found.'));
+        });
+      
+        it('should return a domain error if mark the document sa processed fails with a domain error', async () => {
+          const documentId = new UID();
+          const existingDocument = Document.create({
+            metadata: null,
+            uploadedAt: new Date(),
+            updatedAt: new Date(),
+            filePath: 'path/to/existing/document',
+          }, documentId);
+      
+          mockDocumentRepository.findById = vi.fn().mockResolvedValue(existingDocument);
+          mockDocumentRepository.save = vi.fn().mockRejectedValue(new DomainError('Domain error'));
+      
+          const result = await documentService.markAsProcessed(documentId.value);
+      
+          expect(result).toEqual(fail('Domain error'));
+        });
+      
+        it('should return a generic error message for non-domain errors', async () => {
+          const documentId = new UID();
+          const existingDocument = Document.create({
+            metadata: null,
+            uploadedAt: new Date(),
+            updatedAt: new Date(),
+            filePath: 'path/to/existing/document',
+          }, documentId);
+      
+          mockDocumentRepository.findById = vi.fn().mockResolvedValue(existingDocument);
+          mockDocumentRepository.save = vi.fn().mockRejectedValue(new Error('Generic error'));
+      
+          const result = await documentService.markAsProcessed(documentId.value);
+      
+          expect(result).toEqual(fail('An error occurred while trying to mark document as processed.'));
+        });
+      });
 });
