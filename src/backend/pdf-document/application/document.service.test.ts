@@ -8,28 +8,29 @@ import { ProcessingAPI } from "./processing-api.port";
 import { UploadDocumentDto } from "./document.dto";
 import { fail, ok } from "src/backend/core/result";
 import { DomainError } from "src/backend/core/domain-error";
+import { UID } from "src/backend/core/id";
 
 describe('DocumentService', () => {
     let documentService: DocumentService;
     let mockDocumentRepository: Partial<DocumentRepository>;
     let mockProcessingApi: Partial<ProcessingAPI>;
-  
+
     beforeEach(() => {
-      mockDocumentRepository = {
-        findById: vi.fn(),
-        saveWithFile: vi.fn(),
-        save: vi.fn(),
-      };
-  
-      mockProcessingApi = {
-        processDocument: vi.fn().mockImplementation(documentId => Promise.resolve())
-      };
-  
-      documentService = new DocumentService(mockDocumentRepository as DocumentRepository, mockProcessingApi as ProcessingAPI);
+        mockDocumentRepository = {
+            findById: vi.fn(),
+            saveWithFile: vi.fn(),
+            save: vi.fn(),
+        };
+
+        mockProcessingApi = {
+            processDocument: vi.fn().mockImplementation(documentId => Promise.resolve())
+        };
+
+        documentService = new DocumentService(mockDocumentRepository as DocumentRepository, mockProcessingApi as ProcessingAPI);
     });
-  
+
     afterEach(() => {
-      vi.clearAllMocks();
+        vi.clearAllMocks();
     });
 
     describe('getMetadata', () => {
@@ -44,7 +45,7 @@ describe('DocumentService', () => {
             vi.spyOn(mockDocumentRepository, 'findById').mockResolvedValue(document);
             const metadataDto = await documentService.getMetadata(document.id.value);
             expect(metadataDto.success).toBe(true);
-            if(metadataDto.success) {
+            if (metadataDto.success) {
                 expect(metadataDto.value).toEqual(metadata.toObject());
             }
         });
@@ -60,33 +61,100 @@ describe('DocumentService', () => {
 
     describe('uploadDocument', () => {
         it('should successfully upload a document', async () => {
-          const uploadDto: UploadDocumentDto = { file: Buffer.from('file content') };
-    
-          const result = await documentService.uploadDocument(uploadDto);
-    
-          expect(result).toEqual(ok(undefined));
-          expect(mockDocumentRepository.saveWithFile).toHaveBeenCalled();
-          expect(mockDocumentRepository.save).toHaveBeenCalled();
+            const uploadDto: UploadDocumentDto = { file: Buffer.from('file content') };
+
+            const result = await documentService.uploadDocument(uploadDto);
+
+            expect(result).toEqual(ok(undefined));
+            expect(mockDocumentRepository.saveWithFile).toHaveBeenCalled();
+            expect(mockDocumentRepository.save).toHaveBeenCalled();
         });
-    
+
         it('should return a domain error if saving the document fails with a domain error', async () => {
-          mockDocumentRepository.saveWithFile = vi.fn().mockRejectedValue(new DomainError('Domain error'));
-    
-          const uploadDto: UploadDocumentDto = { file: Buffer.from('file content') };
-    
-          const result = await documentService.uploadDocument(uploadDto);
-    
-          expect(result).toEqual(fail('Domain error'));
+            mockDocumentRepository.saveWithFile = vi.fn().mockRejectedValue(new DomainError('Domain error'));
+
+            const uploadDto: UploadDocumentDto = { file: Buffer.from('file content') };
+
+            const result = await documentService.uploadDocument(uploadDto);
+
+            expect(result).toEqual(fail('Domain error'));
         });
-    
+
         it('should return a generic error message for non-domain errors', async () => {
-          mockDocumentRepository.saveWithFile = vi.fn().mockRejectedValue(new Error('Generic error'));
-    
-          const uploadDto: UploadDocumentDto = { file: Buffer.from('file content') };
-    
-          const result = await documentService.uploadDocument(uploadDto);
-    
-          expect(result).toEqual(fail('An error occurred while uploading the document.'));
+            mockDocumentRepository.saveWithFile = vi.fn().mockRejectedValue(new Error('Generic error'));
+
+            const uploadDto: UploadDocumentDto = { file: Buffer.from('file content') };
+
+            const result = await documentService.uploadDocument(uploadDto);
+
+            expect(result).toEqual(fail('An error occurred while uploading the document.'));
         });
-      });
+    });
+
+    describe('updateMetadata', () => {
+        it('should successfully update document metadata', async () => {
+            const documentId = new UID();
+            const metadataDto = { kind: 'regulation', author: 'John Doe', name: 'Detailed Report' };
+            const existingDocument = Document.create({
+                metadata: null,
+                uploadedAt: new Date(),
+                updatedAt: new Date(),
+                filePath: 'path/to/existing/document',
+            }, documentId);
+
+            mockDocumentRepository.findById = vi.fn().mockResolvedValue(existingDocument);
+
+            const result = await documentService.updateMetadata(documentId.value, metadataDto);
+
+            expect(result).toEqual(ok(undefined));
+            expect(mockDocumentRepository.save).toHaveBeenCalled();
+        });
+
+        it('should return "Document not found." if the document does not exist', async () => {
+            const documentId = 'non-existent-document-id';
+            const metadataDto = { kind: 'regulation', author: 'John Doe', name: 'Detailed Report' };
+
+            mockDocumentRepository.findById = vi.fn().mockResolvedValue(null);
+
+            const result = await documentService.updateMetadata(documentId, metadataDto);
+
+            expect(result).toEqual(fail('Document not found.'));
+        });
+
+        it('should return a domain error if updating metadata fails with a domain error', async () => {
+            const documentId = new UID();
+            const metadataDto = { kind: 'regulation', author: 'John Doe', name: 'Detailed Report' };
+            const existingDocument = Document.create({
+                metadata: null,
+                uploadedAt: new Date(),
+                updatedAt: new Date(),
+                filePath: 'path/to/existing/document',
+            }, documentId);
+
+            mockDocumentRepository.findById = vi.fn().mockResolvedValue(existingDocument);
+            mockDocumentRepository.save = vi.fn().mockRejectedValue(new DomainError('Domain error'));
+
+            const result = await documentService.updateMetadata(documentId.value, metadataDto);
+
+            expect(result).toEqual(fail('Domain error'));
+        });
+
+        it('should return a generic error message for non-domain errors', async () => {
+            const documentId = 'some-document-id';
+            const metadataDto = { kind: 'regulation', author: 'John Doe', name: 'Detailed Report' };
+            const existingDocument = Document.create({
+                metadata: null,
+                uploadedAt: new Date(),
+                updatedAt: new Date(),
+                filePath: 'path/to/existing/document',
+            });
+
+            mockDocumentRepository.findById = vi.fn().mockResolvedValue(existingDocument);
+            mockDocumentRepository.save = vi.fn().mockRejectedValue(new Error('Generic error'));
+
+            const result = await documentService.updateMetadata(documentId, metadataDto);
+
+            expect(result).toEqual(fail('An error occurred while updating the document metadata.'));
+        });
+    });
 });

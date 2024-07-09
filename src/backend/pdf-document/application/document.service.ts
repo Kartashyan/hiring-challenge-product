@@ -4,6 +4,8 @@ import { DocumentRepository } from "./document-repository.port.ts";
 import { MetadataDto, UploadDocumentDto } from "./document.dto.ts";
 import { ProcessingAPI } from "./processing-api.port.ts";
 import { Document, DocumentStatus } from "../domain/document.aggregate.ts";
+import { Metadata } from "../domain/metadata.value-object.ts";
+import { DocumentKind } from "../domain/document-kind.value-object.ts";
 
 export class DocumentService {
     constructor(private readonly documentRepository: DocumentRepository, private readonly processingApi: ProcessingAPI) { }
@@ -52,4 +54,51 @@ export class DocumentService {
             }
         }
     }
+
+    async getFilePath(documentId: string): Promise<Result<string | null>> {
+        try {
+            const document = await this.documentRepository.findById(documentId);
+            if (!document) {
+                return fail("Document not found.");
+            }
+
+            return ok(document.getFilePath());
+        } catch (error) {
+            if (error instanceof DomainError) {
+                return fail(error.message);
+            } else {
+                return fail("An error occurred while trying to get the document file path.");
+            }
+        }
+    }
+
+    async updateMetadata(documentId: string, metadataDto: MetadataDto): Promise<Result<void>> {
+        try {
+            const document = await this.documentRepository.findById(documentId);
+            if (!document) {
+                return fail("Document not found.");
+            }
+
+            document.updateMetadata(new Metadata(
+                metadataDto.kind,
+                metadataDto.author,
+                new DocumentKind(metadataDto.kind),
+            ));
+
+            await this.documentRepository.save(document);
+            await this.processingApi.processDocument(document.id.value);
+
+            document.updateStatus(DocumentStatus.PROCESSING);
+            await this.documentRepository.save(document);
+
+            return ok(undefined);
+        } catch (error) {
+            if (error instanceof DomainError) {
+                return fail(error.message);
+            } else {
+                return fail("An error occurred while updating the document metadata.");
+            }
+        }
+    }
+    
 }
