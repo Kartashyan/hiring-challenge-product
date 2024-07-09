@@ -18,7 +18,7 @@ describe("Document", () => {
     });
 
     it("should create a new document with default status", () => {
-        expect(document.status).toBe(DocumentStatus.UPLOADING);
+        expect(document.status).toBe(DocumentStatus.PENDING);
     });
 
     it("should update the metadata of the document", () => {
