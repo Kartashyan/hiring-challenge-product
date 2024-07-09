@@ -3,7 +3,6 @@ import { UID } from "src/backend/core/id";
 import { Metadata } from "./metadata.value-object";
 
 export enum DocumentStatus {
-    UPLOADING = "uploading",
     PENDING = "pending",
     PROCESSING = "processing",
     PROCESSED = "processed",
@@ -21,7 +20,7 @@ export class Document extends AggregateRoot<DocumentProps> {
     #status: DocumentStatus;
     constructor(_props: DocumentProps, id?: UID) {
         super(_props, id);
-        this.#status = DocumentStatus.UPLOADING;
+        this.#status = DocumentStatus.PENDING;
     }
 
     public static create(props: DocumentProps, id?: UID): Document {
