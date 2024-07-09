@@ -7,7 +7,8 @@
     "dev": "vite",
     "server": "tsx ./src/backend/index.ts",
     "drizzle:prepare": "drizzle-kit generate:sqlite",
-    "drizzle:migrate": "tsx ./src/backend/migrate.ts"
+    "drizzle:migrate": "tsx ./src/backend/migrate.ts",
+    "test": "vitest"
   },
   "author": "Cleary GmbH",
   "dependencies": {
@@ -30,6 +31,7 @@
     "@vitejs/plugin-react": "^4.2.1",
     "drizzle-kit": "^0.20.14",
     "tsx": "^4.7.1",
-    "vite": "^5.1.6"
+    "vite": "^5.1.6",
+    "vitest": "^2.0.1"
   }
 }
