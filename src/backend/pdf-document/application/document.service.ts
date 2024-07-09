@@ -121,5 +121,24 @@ export class DocumentService {
             }
         }
     }
-    
+
+    async deleteDocument(id: string): Promise<Result<void>> {
+        try {
+            const document = await this.documentRepository.findById(id);
+            if (!document) {
+                return fail("Document not found.");
+            }
+
+            await this.documentRepository.delete(document);
+
+            return ok(undefined);
+        } catch (error) {
+            if (error instanceof DomainError) {
+                return fail(error.message);
+            } else {
+                return fail("An error occurred while trying to delete the document.");
+            }
+        }
+    }
+
 }
