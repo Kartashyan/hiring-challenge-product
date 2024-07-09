@@ -18,7 +18,7 @@ export class LocalFileStorage implements FileStorage {
 
   async save(file: Buffer, fileName: string): Promise<string> {
     const filePath = path.join(this.storagePath, fileName);
-    await writeFile(filePath, file);
+    try { await writeFile(filePath, file); } catch (error) { console.log("----error---",error); throw error;}
     return filePath;
   }
 
