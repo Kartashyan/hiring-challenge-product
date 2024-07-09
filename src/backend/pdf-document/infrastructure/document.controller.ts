@@ -15,7 +15,6 @@ const documentService = new DocumentService(documentRepository, processingApi);
 
 export const documentRouter = Router();
 
-// Helper function to handle file uploads
 const handleFileUpload = async (req: Request): Promise<Buffer> => {
   return new Promise((resolve, reject) => {
     const chunks: Buffer[] = [];
@@ -42,7 +41,7 @@ documentRouter.get('/:id', async (req: Request, res: Response) => {
 
 // GET /document/:id/resource - Returns the raw PDF resource.
 documentRouter.get('/:id/resource', async (req: Request, res: Response) => {
-  const result = await documentService.getFilePath(req.params.id || '');
+  const result = await documentService.getFilePath(String(req.params.id));
   if (!result.success) {
     return res.status(404).json({ message: result.reason });
   }
@@ -56,12 +55,13 @@ documentRouter.get('/:id/resource', async (req: Request, res: Response) => {
 });
 
 // POST /document/:id - Uploads a new document.
-documentRouter.post('/:id', async (req: Request, res: Response) => {
+documentRouter.post('/upload', async (req: Request, res: Response) => {
   try {
-    const fileBuffer = await handleFileUpload(req);
-    const uploadDto: UploadDocumentDto = { file: fileBuffer };
+      const fileBuffer = await handleFileUpload(req);
+      const uploadDto: UploadDocumentDto = { file: fileBuffer };
+      
+      const result = await documentService.uploadDocument(uploadDto);
 
-    const result = await documentService.uploadDocument(uploadDto);
     if (!result.success) {
       return res.status(500).json({ message: result.reason });
     }
@@ -71,8 +71,8 @@ documentRouter.post('/:id', async (req: Request, res: Response) => {
   }
 });
 
-// POST /document/:id/metadata - Updates the document's metadata and triggers a call to the PROCESSING_API_ENDPOINT.
-documentRouter.post('/:id/metadata', async (req: Request, res: Response) => {
+// POST /document/:id - Updates the document's metadata and triggers a call to the PROCESSING_API_ENDPOINT.
+documentRouter.post('/:id', async (req: Request, res: Response) => {
   const metadataDto: MetadataDto = req.body;
   const result = await documentService.updateMetadata(String(req.params.id), metadataDto);
   if (!result.success) {
