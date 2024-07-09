@@ -12,6 +12,10 @@ export class InMemoryAdapter implements DocumentRepository {
         return this.documents.find(doc => doc.id.value === id) || null;
     }
 
+    public async list(): Promise<Document[]> {
+        return this.documents;
+    }
+
     public async save(document: Document): Promise<void> {
         this.documents = this.documents.filter(doc => doc.id !== document.id);
         this.documents.push(document);

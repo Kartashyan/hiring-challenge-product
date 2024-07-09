@@ -30,6 +30,25 @@ const handleFileUpload = async (req: Request): Promise<Buffer> => {
   });
 };
 
+// GET /document/pending - Returns a list of pending documents.
+documentRouter.get('/pending', async (req: Request, res: Response) => {
+    const result = await documentService.getPendingDocuments();
+    if (!result.success) {
+        return res.status(500).json({ message: result.reason });
+    }
+    return res.json(result.value);
+});
+
+// GET /document/pending - Returns a list of processed documents.
+documentRouter.get('/processed', async (req: Request, res: Response) => {
+    const result = await documentService.getProcessedDocuments();
+    if (!result.success) {
+        return res.status(500).json({ message: result.reason });
+    }
+    return res.json(result.value);
+});
+
+
 // GET /document/:id - Returns the document's metadata.
 documentRouter.get('/:id', async (req: Request, res: Response) => {
   const result = await documentService.getMetadata(String(req.params.id));

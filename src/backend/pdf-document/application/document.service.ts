@@ -6,6 +6,7 @@ import { ProcessingAPI } from "./processing-api.port.ts";
 import { Document, DocumentStatus } from "../domain/document.aggregate.ts";
 import { Metadata } from "../domain/metadata.value-object.ts";
 import { DocumentKind } from "../domain/document-kind.value-object.ts";
+import { documentMapper, DocumentModel } from "../domain/document.model.ts";
 
 export class DocumentService {
     constructor(private readonly documentRepository: DocumentRepository, private readonly processingApi: ProcessingAPI) { }
@@ -141,4 +142,37 @@ export class DocumentService {
         }
     }
 
+    async getPendingDocuments(): Promise<Result<DocumentModel[]>> {
+        try {
+            const documents = await this.documentRepository.list();
+
+            const pandingDocuments = documents.filter((document) => document.status === DocumentStatus.PENDING);
+
+            return ok(pandingDocuments.map(documentMapper));
+        } catch (error) {
+            if (error instanceof DomainError) {
+                return fail(error.message);
+            } else {
+                return fail("An error occurred while trying to get the pending documents.");
+            }
+        }
+    }
+
+    async getProcessedDocuments(): Promise<Result<DocumentModel[]>> {
+        try {
+            const documents = await this.documentRepository.list();
+
+            const processedDocuments = documents.filter((document) => document.status === DocumentStatus.PROCESSED);
+
+            return ok(processedDocuments.map(documentMapper));
+        } catch (error) {
+            if (error instanceof DomainError) {
+                return fail(error.message);
+            } else {
+                return fail("An error occurred while trying to get the processed documents.");
+            }
+        }
+    }
+
 }
+

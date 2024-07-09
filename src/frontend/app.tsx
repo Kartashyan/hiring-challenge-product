@@ -6,6 +6,9 @@ import { StrictMode } from "react";
 import reactDOM from "react-dom/client";
 import { createBrowserRouter, Link, Outlet, RouterProvider } from 'react-router-dom';
 import { UploadPDF, action as uploadPDFAction} from './components/UploadPDF';
+import { PendingPDFs, loader as pendingPDFsLoader } from './components/PendingPDFs';
+import { ProcessedPDFs, loader as processedPDFsLoader } from './components/ProcessedPDFs';
+import { ViewEditPDF, loader as viewEditPDFLoader, action as viewEditPDFAction} from './components/ViewEditPDF';
 
 
 const router = createBrowserRouter([
@@ -13,7 +16,10 @@ const router = createBrowserRouter([
     path: '/',
     element: <App />,
     children: [
+      { path: '/', element: <ProcessedPDFs />, loader: processedPDFsLoader },
       { path: '/upload', element: <UploadPDF />, action: uploadPDFAction },
+      { path: '/pending', element: <PendingPDFs />, loader: pendingPDFsLoader },
+      { path: '/document/:id', element: <ViewEditPDF />, loader: viewEditPDFLoader, action: viewEditPDFAction },
     ],
   },
 ]);

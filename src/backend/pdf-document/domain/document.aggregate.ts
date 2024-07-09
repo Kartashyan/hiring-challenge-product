@@ -36,6 +36,18 @@ export class Document extends AggregateRoot<DocumentProps> {
         return document;
     }
 
+    get uploadedAt(): Date {
+        return this.props.uploadedAt;
+    }
+
+    get updatedAt(): Date {
+        return this.props.updatedAt;
+    }
+
+    get metadata() {
+        return this.props.metadata?.toObject() || null;
+    }
+
     public updateMetadata(metadata: Metadata): void {
         this.props.metadata = metadata;
         this.addDomainEvent({
