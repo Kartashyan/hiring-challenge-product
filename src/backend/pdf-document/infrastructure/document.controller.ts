@@ -32,7 +32,7 @@ const handleFileUpload = async (req: Request): Promise<Buffer> => {
 
 // GET /document/pending - Returns a list of pending documents.
 documentRouter.get('/pending', async (req: Request, res: Response) => {
-    const result = await documentService.getPendingDocuments();
+    const result = await documentService.getAllDocuments();
     if (!result.success) {
         return res.status(500).json({ message: result.reason });
     }
@@ -41,7 +41,7 @@ documentRouter.get('/pending', async (req: Request, res: Response) => {
 
 // GET /document/pending - Returns a list of processed documents.
 documentRouter.get('/processed', async (req: Request, res: Response) => {
-    const result = await documentService.getProcessedDocuments();
+    const result = await documentService.getAllDocuments();
     if (!result.success) {
         return res.status(500).json({ message: result.reason });
     }
@@ -60,6 +60,7 @@ documentRouter.get('/:id', async (req: Request, res: Response) => {
 
 // GET /document/:id/resource - Returns the raw PDF resource.
 documentRouter.get('/:id/resource', async (req: Request, res: Response) => {
+  console.log("req.params.id", req.params.id);
   const result = await documentService.getFilePath(String(req.params.id));
   if (!result.success) {
     return res.status(404).json({ message: result.reason });
