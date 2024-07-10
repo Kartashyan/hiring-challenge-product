@@ -1,6 +1,7 @@
+import { Table } from 'antd';
 import React from 'react';
 import { Link, useLoaderData } from 'react-router-dom';
-import { Button, Table } from 'antd';
+import { DocumentModel } from 'src/backend/pdf-document/domain/document.model';
 
 export async function loader() {
     const response = await fetch('/api/document/pending');
@@ -9,7 +10,7 @@ export async function loader() {
 }
 
 export const PendingPDFs: React.FC = () => {
-    const pdfs = useLoaderData() as any[];
+    const documents = useLoaderData() as DocumentModel[];
 
     const columns = [
         { title: 'Title', dataIndex: 'name', key: 'name' },
@@ -23,12 +24,12 @@ export const PendingPDFs: React.FC = () => {
             key: 'actions',
             render: (text: any, record: any) => (
               <span>
-                <Link to={`/document/${record.id}`}>Edit</Link>
+                <Link to={`/${record.id}`}>Edit</Link>
               </span>
             ),
           },
     ];
 
-    return <Table dataSource={pdfs} columns={columns} rowKey="id" />;
+    return <Table dataSource={documents} columns={columns} rowKey="id" />;
 };
 
