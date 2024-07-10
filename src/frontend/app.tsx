@@ -24,7 +24,7 @@ const router = createBrowserRouter([
         { path: '/', element: <ProcessedPDFs />, loader: processedPDFsLoader },
         { path: '/upload', element: <UploadPDF />, action: uploadPDFAction },
         { path: '/pending', element: <PendingPDFs />, loader: pendingPDFsLoader },
-        { path: '/document/:id', element: <ViewEditPDF />, loader: viewEditPDFLoader, action: viewEditPDFAction },
+        { path: '/:id', element: <ViewEditPDF />, loader: viewEditPDFLoader, action: viewEditPDFAction },
       ]
     }],
   },
