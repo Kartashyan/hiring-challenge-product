@@ -48,6 +48,10 @@ export class Document extends AggregateRoot<DocumentProps> {
         return this.props.metadata?.toObject() || null;
     }
 
+    get filePath(): string {
+        return this.props.filePath || "";
+    }
+
     public updateMetadata(metadata: Metadata): void {
         this.props.metadata = metadata;
         this.addDomainEvent({
