@@ -1,26 +1,32 @@
 import { Layout, Menu } from 'antd';
-import 'antd/dist/reset.css'
+import 'antd/dist/reset.css';
 import { Content, Header } from 'antd/es/layout/layout';
 
 import { StrictMode } from "react";
 import reactDOM from "react-dom/client";
 import { createBrowserRouter, Link, Outlet, RouterProvider } from 'react-router-dom';
-import { UploadPDF, action as uploadPDFAction} from './components/UploadPDF';
+import { RootErrorBoundary } from './components/ErrorPage';
 import { PendingPDFs, loader as pendingPDFsLoader } from './components/PendingPDFs';
 import { ProcessedPDFs, loader as processedPDFsLoader } from './components/ProcessedPDFs';
-import { ViewEditPDF, loader as viewEditPDFLoader, action as viewEditPDFAction} from './components/ViewEditPDF';
+import { UploadPDF, action as uploadPDFAction } from './components/UploadPDF';
+import { ViewEditPDF, action as viewEditPDFAction, loader as viewEditPDFLoader } from './components/ViewEditPDF';
 
 
 const router = createBrowserRouter([
   {
     path: '/',
     element: <App />,
-    children: [
-      { path: '/', element: <ProcessedPDFs />, loader: processedPDFsLoader },
-      { path: '/upload', element: <UploadPDF />, action: uploadPDFAction },
-      { path: '/pending', element: <PendingPDFs />, loader: pendingPDFsLoader },
-      { path: '/document/:id', element: <ViewEditPDF />, loader: viewEditPDFLoader, action: viewEditPDFAction },
-    ],
+    children: [{
+      path: "",
+      element: <Outlet />,
+      errorElement: <RootErrorBoundary />,
+      children: [
+        { path: '/', element: <ProcessedPDFs />, loader: processedPDFsLoader },
+        { path: '/upload', element: <UploadPDF />, action: uploadPDFAction },
+        { path: '/pending', element: <PendingPDFs />, loader: pendingPDFsLoader },
+        { path: '/document/:id', element: <ViewEditPDF />, loader: viewEditPDFLoader, action: viewEditPDFAction },
+      ]
+    }],
   },
 ]);
 
@@ -52,3 +58,4 @@ reactDOM.createRoot(document.getElementById("root")!).render(
     <RouterProvider router={router} />
   </StrictMode>
 );
+
