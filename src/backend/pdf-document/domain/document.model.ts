@@ -8,6 +8,7 @@ export type DocumentModel = {
     kind: string,
     uploadedAt: Date,
     updatedAt: Date,
+    filePath: string,
 }
 
 export function documentMapper(document: Document) {
@@ -20,5 +21,6 @@ export function documentMapper(document: Document) {
         kind: kind || "",
         uploadedAt: document.uploadedAt,
         updatedAt: document.updatedAt,
+        filePath: document.filePath,
     };
 }
