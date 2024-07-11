@@ -25,7 +25,7 @@ export function UploadPDF() {
       <div>
         <h1>Upload PDF</h1>
         <Form method="post" encType="multipart/form-data">
-          <input type="file" name="pdf" accept="application/pdf" />
+          <input type="file" multiple name="pdfs" accept="application/pdf" />
           <button type="submit" disabled={navigation.state === "submitting"}>
             {navigation.state === "submitting" ? "Uploading..." : "Upload"}
           </button>

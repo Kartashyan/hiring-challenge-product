@@ -1,7 +1,8 @@
 import { beforeEach, describe, expect, it } from "vitest";
 import { DocumentKind } from "./document-kind.value-object";
-import { Document, DocumentProps, DocumentStatus } from "./document.aggregate";
+import { Document, DocumentProps } from "./document.aggregate";
 import { Metadata } from "./metadata.value-object";
+import { DocumentStatus } from "./document-status.value-object";
 
 describe("Document", () => {
     let document: Document;
@@ -18,13 +19,12 @@ describe("Document", () => {
     });
 
     it("should create a new document with default status", () => {
-        expect(document.status).toBe(DocumentStatus.PENDING);
+        expect(document.status).toBe(DocumentStatus.INITIAL);
     });
 
     it("should update the metadata of the document", () => {
         const metadata: Metadata = new Metadata("Document Name", "Author Name", new DocumentKind("regulation"));
         document.updateMetadata(metadata);
-        console.log(document.getMetadata());
         expect(document.getMetadata()).toEqual(metadata);
     });
 

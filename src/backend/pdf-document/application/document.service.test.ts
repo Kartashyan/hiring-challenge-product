@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { DocumentKind } from "../domain/document-kind.value-object";
-import { Document, DocumentStatus } from "../domain/document.aggregate";
+import { Document } from "../domain/document.aggregate";
 import { Metadata } from "../domain/metadata.value-object";
 import { DocumentRepository } from "./document-repository.port";
 import { DocumentService } from "./document.service";
@@ -9,6 +9,7 @@ import { UploadDocumentDto } from "./document.dto";
 import { fail, ok } from "src/backend/core/result";
 import { DomainError } from "src/backend/core/domain-error";
 import { UID } from "src/backend/core/id";
+import { DocumentStatus } from "../domain/document-status.value-object";
 
 describe('DocumentService', () => {
     let documentService: DocumentService;

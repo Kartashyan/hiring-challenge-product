@@ -6,8 +6,8 @@ import { StrictMode } from "react";
 import reactDOM from "react-dom/client";
 import { createBrowserRouter, Link, Outlet, RouterProvider } from 'react-router-dom';
 import { RootErrorBoundary } from './components/ErrorPage';
-import { PendingPDFs, loader as pendingPDFsLoader } from './components/PendingPDFs';
-import { ProcessedPDFs, loader as processedPDFsLoader } from './components/ProcessedPDFs';
+import { PendingPDFs, loader as pendingPDFsLoader } from './components/PendingOrProcessingPDFs';
+import { ProcessedPDFs, loader as processedPDFsLoader, action as processedPDFsAction } from './components/ProcessedPDFs';
 import { UploadPDF, action as uploadPDFAction } from './components/UploadPDF';
 import { ViewEditPDF, action as viewEditPDFAction, loader as viewEditPDFLoader } from './components/ViewEditPDF';
 
@@ -21,10 +21,10 @@ const router = createBrowserRouter([
       element: <Outlet />,
       errorElement: <RootErrorBoundary />,
       children: [
-        { path: '/', element: <ProcessedPDFs />, loader: processedPDFsLoader },
+        { path: '/', element: <ProcessedPDFs />, loader: processedPDFsLoader, action: processedPDFsAction},
         { path: '/upload', element: <UploadPDF />, action: uploadPDFAction },
         { path: '/pending', element: <PendingPDFs />, loader: pendingPDFsLoader },
-        { path: '/:id', element: <ViewEditPDF />, loader: viewEditPDFLoader, action: viewEditPDFAction },
+        { path: '/view/:id', element: <ViewEditPDF />, loader: viewEditPDFLoader, action: viewEditPDFAction },
       ]
     }],
   },

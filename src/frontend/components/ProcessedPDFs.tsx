@@ -1,14 +1,30 @@
-import { useLoaderData, Link } from 'react-router-dom';
+import { useLoaderData, Link, LoaderFunction, useSubmit, ActionFunction } from 'react-router-dom';
 import { Table, Button } from 'antd';
+import { flatDocument, FlatDocumentModel } from '../utils';
 
-export async function loader() {
+export const loader: LoaderFunction = async () => {
   const response = await fetch('/api/document/processed');
+  const data = await response.json();
+  return data.map(flatDocument);
+}
+
+export const action: ActionFunction = async ({ params, request }) => {
+  const formData = await request.formData();
+  const id = formData.get('id') as string;
+  const response = await fetch(`/api/document/${id}`, { method: 'DELETE' });
   const data = await response.json();
   return data;
 }
 
 export const ProcessedPDFs: React.FC = () => {
-  const pdfs = useLoaderData() as any[];
+  const documents = useLoaderData() as FlatDocumentModel[];
+  const submit = useSubmit();
+
+  const handleDelete = async (id: string) => {
+    let formData = new FormData();
+    formData.append("id", id);
+    submit(formData, { method: 'DELETE' });
+  };
 
   const columns = [
     { title: 'Name', dataIndex: 'name', key: 'name' },
@@ -21,19 +37,13 @@ export const ProcessedPDFs: React.FC = () => {
       key: 'actions',
       render: (text: any, record: any) => (
         <span>
-          <Link to={`/document/${record.id}`}>View</Link>
+          <Link to={`/view/${record.id}`}>View</Link>
           <Button type="link" onClick={() => handleDelete(record.id)}>Delete</Button>
         </span>
       ),
     },
   ];
 
-  const handleDelete = async (id: string) => {
-    await fetch(`/api/document/${id}`, { method: 'DELETE' });
-    // Reload data
-    window.location.reload();
-  };
-
-  return <Table dataSource={pdfs} columns={columns} rowKey="id" />;
+  return <Table dataSource={documents} columns={columns} rowKey="id" />;
 };
 

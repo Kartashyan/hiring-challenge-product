@@ -1,12 +1,13 @@
 import { Table } from 'antd';
 import React from 'react';
 import { Link, useLoaderData } from 'react-router-dom';
-import { DocumentModel } from 'src/backend/pdf-document/domain/document.model';
+import { DocumentModel } from 'src/backend/pdf-document/application/document.dto';
+import { flatDocument } from '../utils';
 
 export async function loader() {
-    const response = await fetch('/api/document/pending');
-    const data = await response.json();
-    return data;
+    const response = await fetch('/api/document/pending-or-processing');
+    const data = await response.json() as DocumentModel[];
+    return data.map(flatDocument);
 }
 
 export const PendingPDFs: React.FC = () => {
@@ -24,7 +25,7 @@ export const PendingPDFs: React.FC = () => {
             key: 'actions',
             render: (text: any, record: any) => (
               <span>
-                <Link to={`/${record.id}`}>Edit</Link>
+                <Link to={`/view/${record.id}`}>Edit</Link>
               </span>
             ),
           },

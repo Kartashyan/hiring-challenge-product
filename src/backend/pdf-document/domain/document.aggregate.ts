@@ -1,12 +1,7 @@
 import { AggregateRoot } from "src/backend/core/aggregate-root";
 import { UID } from "src/backend/core/id";
 import { Metadata } from "./metadata.value-object";
-
-export enum DocumentStatus {
-    PENDING = "pending",
-    PROCESSING = "processing",
-    PROCESSED = "processed",
-}
+import { DocumentStatus } from "./document-status.value-object";
 
 export interface DocumentProps {
     id?: string;
@@ -17,14 +12,14 @@ export interface DocumentProps {
 }
 
 export class Document extends AggregateRoot<DocumentProps> {
-    #status: DocumentStatus;
-    constructor(_props: DocumentProps, id?: UID) {
+    #status: string;
+    constructor(_props: DocumentProps, id?: UID, status?: string) {
         super(_props, id);
-        this.#status = DocumentStatus.PENDING;
+        this.#status = status ? new DocumentStatus(status).value : DocumentStatus.INITIAL;
     }
 
-    public static create(props: DocumentProps, id?: UID): Document {
-        const document = new Document(props, id);
+    public static create(props: DocumentProps, id?: UID, status?: string): Document {
+        const document = new Document(props, id, status);
         const isNew = !id;
         if (isNew) {
             document.addDomainEvent({
@@ -36,20 +31,24 @@ export class Document extends AggregateRoot<DocumentProps> {
         return document;
     }
 
-    get uploadedAt(): Date {
-        return this.props.uploadedAt;
+    get uploadedAt(): string {
+        return this.props.uploadedAt.toISOString();
     }
 
-    get updatedAt(): Date {
-        return this.props.updatedAt;
-    }
-
-    get metadata() {
-        return this.props.metadata?.toObject() || null;
+    get updatedAt(): string {
+        return this.props.updatedAt.toISOString();
     }
 
     get filePath(): string {
         return this.props.filePath || "";
+    }
+
+    get status(): string {
+        return this.#status;
+    }
+
+    get metadata(): {[key: string]: string} | null {
+        return this.props.metadata?.toObject() || null;
     }
 
     public updateMetadata(metadata: Metadata): void {
@@ -61,12 +60,8 @@ export class Document extends AggregateRoot<DocumentProps> {
         });
     }
 
-    get status(): DocumentStatus {
-        return this.#status;
-    }
-
-    public updateStatus(status: DocumentStatus): void {
-        this.#status = status;
+    public updateStatus(status: string): void {
+        this.#status = new DocumentStatus(status).value;
         this.addDomainEvent({
             name: "document.status.updated",
             occuredAt: new Date(),

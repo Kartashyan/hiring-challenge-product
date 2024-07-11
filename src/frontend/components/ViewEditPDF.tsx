@@ -1,14 +1,15 @@
+import { Form as AntForm, Button, Input, Select } from 'antd';
 import React, { useState } from 'react';
-import { useLoaderData, useParams, useSubmit, Form, redirect } from 'react-router-dom';
-import { Form as AntForm, Input, Button, Select } from 'antd';
+import { ActionFunctionArgs, Form, LoaderFunctionArgs, redirect, useLoaderData, useParams } from 'react-router-dom';
+import { MetadataModel } from 'src/backend/pdf-document/application/document.dto';
 
-export async function loader({ params }: any) {
+export async function loader({ params }: LoaderFunctionArgs) {
     const response = await fetch(`/api/document/${params.id}`);
     const data = await response.json();
     return data;
 }
 
-export async function action({ request, params }: any) {
+export async function action({ request, params }: ActionFunctionArgs) {
     const formData = await request.formData();
     const data = Object.fromEntries(formData);
     await fetch(`/api/document/${params.id}`, {
@@ -23,7 +24,7 @@ export async function action({ request, params }: any) {
 
 export const ViewEditPDF: React.FC = () => {
     const { id } = useParams<{ id: string }>();
-    const metadata = useLoaderData() as any;
+    const metadata = useLoaderData() as MetadataModel | null;
     const [selectedValue, setSelectedValue] = useState<string | undefined>(undefined);
 
       const handleChange = (value: string) => {
@@ -39,10 +40,10 @@ export const ViewEditPDF: React.FC = () => {
                 method="post"
             >
                 <AntForm.Item name="name" label="Name">
-                    <Input name='name' defaultValue={metadata?.name}/>
+                    <Input name='name' defaultValue={metadata?.name || ""}/>
                 </AntForm.Item>
                 <AntForm.Item name="author" label="Author">
-                    <Input name="author" defaultValue={metadata?.author}/>
+                    <Input name="author" defaultValue={metadata?.author || ""}/>
                 </AntForm.Item>
                 <AntForm.Item name="kind" label="Kind">
                     <Select

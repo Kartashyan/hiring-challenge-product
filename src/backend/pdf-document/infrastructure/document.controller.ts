@@ -1,51 +1,49 @@
-import { Router, Request, Response } from 'express';
-import { DocumentService } from '../application/document.service';
-import { MetadataDto, UploadDocumentDto } from '../application/document.dto';
+import { Request, Response, Router } from 'express';
 import * as fs from 'fs';
 import * as path from 'path';
+import { MetadataModel, UploadDocumentDto } from '../application/document.dto';
+import { DocumentService } from '../application/document.service';
+import { SQLiteAdapter } from './document-repository.adapter';
 import { LocalFileStorage } from './file-storage-repository.adapter';
-import { InMemoryAdapter } from './document-repository.adapter';
 import { MockProcessingAPI } from './processing-api.mock';
+import multer from 'multer';
 
 const storagePath = 'uploads/';
 const fileStorage = new LocalFileStorage(storagePath);
-const documentRepository = new InMemoryAdapter(fileStorage);
+const documentRepository = new SQLiteAdapter(fileStorage);
 const processingApi = new MockProcessingAPI();
 const documentService = new DocumentService(documentRepository, processingApi);
 
 export const documentRouter = Router();
 
-const handleFileUpload = async (req: Request): Promise<Buffer> => {
-  return new Promise((resolve, reject) => {
-    const chunks: Buffer[] = [];
-    req.on('data', (chunk) => {
-      chunks.push(chunk);
-    });
-    req.on('end', () => {
-      resolve(Buffer.concat(chunks));
-    });
-    req.on('error', (err) => {
-      reject(err);
-    });
-  });
-};
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, storagePath);
+  },
+  filename: (req, file, cb) => {
+    cb(null, Date.now() + '-' + file.originalname);
+  }
+});
+
+// Create multer upload instance
+const upload = multer({ storage: storage });
 
 // GET /document/pending - Returns a list of pending documents.
-documentRouter.get('/pending', async (req: Request, res: Response) => {
-    const result = await documentService.getAllDocuments();
-    if (!result.success) {
-        return res.status(500).json({ message: result.reason });
-    }
-    return res.json(result.value);
+documentRouter.get('/pending-or-processing', async (req: Request, res: Response) => {
+  const result = await documentService.getAllDocuments();
+  if (!result.success) {
+    return res.status(500).json({ message: result.reason });
+  }
+  return res.json(result.value);
 });
 
 // GET /document/pending - Returns a list of processed documents.
 documentRouter.get('/processed', async (req: Request, res: Response) => {
-    const result = await documentService.getAllDocuments();
-    if (!result.success) {
-        return res.status(500).json({ message: result.reason });
-    }
-    return res.json(result.value);
+  const result = await documentService.getAllDocuments();
+  if (!result.success) {
+    return res.status(500).json({ message: result.reason });
+  }
+  return res.json(result.value);
 });
 
 
@@ -60,7 +58,6 @@ documentRouter.get('/:id', async (req: Request, res: Response) => {
 
 // GET /document/:id/resource - Returns the raw PDF resource.
 documentRouter.get('/:id/resource', async (req: Request, res: Response) => {
-  console.log("req.params.id", req.params.id);
   const result = await documentService.getFilePath(String(req.params.id));
   if (!result.success) {
     return res.status(404).json({ message: result.reason });
@@ -75,17 +72,23 @@ documentRouter.get('/:id/resource', async (req: Request, res: Response) => {
 });
 
 // POST /document/:id - Uploads a new document.
-documentRouter.post('/upload', async (req: Request, res: Response) => {
+documentRouter.post('/upload', upload.array("pdfs"), async (req: Request, res: Response) => {
   try {
-      const fileBuffer = await handleFileUpload(req);
-      const uploadDto: UploadDocumentDto = { file: fileBuffer };
-      
-      const result = await documentService.uploadDocument(uploadDto);
+    const files = req.files as Express.Multer.File[]
 
-    if (!result.success) {
-      return res.status(500).json({ message: result.reason });
+    if (!files || files.length === 0) {
+      return res.status(400).json({ message: 'No files uploaded' });
     }
-    return res.status(201).json({ message: 'Document uploaded' });
+
+    for(const file of files) {
+      const uploadDto: UploadDocumentDto = { file: fs.readFileSync(file.path) };
+      const result = await documentService.uploadDocument(uploadDto);
+      if (!result.success) {
+        return res.status(500).json({ message: result.reason });
+      }
+    }
+
+    return res.status(201).json({ message: 'Documents uploaded' });
   } catch (error) {
     return res.status(500).json({ message: 'An error occurred while uploading the document.' });
   }
@@ -93,7 +96,7 @@ documentRouter.post('/upload', async (req: Request, res: Response) => {
 
 // POST /document/:id - Updates the document's metadata and triggers a call to the PROCESSING_API_ENDPOINT.
 documentRouter.post('/:id', async (req: Request, res: Response) => {
-  const metadataDto: MetadataDto = req.body;
+  const metadataDto: MetadataModel = req.body;
   const result = await documentService.updateMetadata(String(req.params.id), metadataDto);
   if (!result.success) {
     return res.status(500).json({ message: result.reason });

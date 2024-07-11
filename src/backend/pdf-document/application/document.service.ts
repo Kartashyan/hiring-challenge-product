@@ -1,17 +1,17 @@
 import { DomainError } from "src/backend/core/domain-error";
-import { Result, fail, ok } from "src/backend/core/result";
-import { DocumentRepository } from "./document-repository.port.ts";
-import { MetadataDto, UploadDocumentDto } from "./document.dto.ts";
-import { ProcessingAPI } from "./processing-api.port.ts";
-import { Document, DocumentStatus } from "../domain/document.aggregate.ts";
-import { Metadata } from "../domain/metadata.value-object.ts";
+import { fail, ok, Result } from "src/backend/core/result";
 import { DocumentKind } from "../domain/document-kind.value-object.ts";
-import { documentMapper, DocumentModel } from "../domain/document.model.ts";
+import { DocumentStatus } from "../domain/document-status.value-object.ts";
+import { Document } from "../domain/document.aggregate.ts";
+import { Metadata } from "../domain/metadata.value-object.ts";
+import { DocumentRepository } from "./document-repository.port.ts";
+import { DocumentModel, MetadataModel, UploadDocumentDto } from "./document.dto.ts";
+import { ProcessingAPI } from "./processing-api.port.ts";
 
 export class DocumentService {
     constructor(private readonly documentRepository: DocumentRepository, private readonly processingApi: ProcessingAPI) { }
 
-    async getMetadata(documentId: string): Promise<Result<MetadataDto | null>> {
+    async getMetadata(documentId: string): Promise<Result<MetadataModel | null>> {
         try {
             const document = await this.documentRepository.findById(documentId);
             if (!document) {
@@ -43,7 +43,6 @@ export class DocumentService {
 
             document.updateFilePath(filePath);
             document.updateStatus(DocumentStatus.PENDING);
-
             await this.documentRepository.save(document);
 
             return ok(undefined);
@@ -73,7 +72,7 @@ export class DocumentService {
         }
     }
 
-    async updateMetadata(documentId: string, metadataDto: MetadataDto): Promise<Result<void>> {
+    async updateMetadata(documentId: string, metadataDto: MetadataModel): Promise<Result<void>> {
         try {
             const document = await this.documentRepository.findById(documentId);
             if (!document) {
@@ -81,8 +80,8 @@ export class DocumentService {
             }
 
             document.updateMetadata(new Metadata(
-                metadataDto.kind,
-                metadataDto.author,
+                metadataDto.name || "",
+                metadataDto.author || "",
                 new DocumentKind(metadataDto.kind),
             ));
 
@@ -129,7 +128,7 @@ export class DocumentService {
             if (!document) {
                 return fail("Document not found.");
             }
-
+            
             await this.documentRepository.delete(document);
 
             return ok(undefined);
@@ -145,7 +144,7 @@ export class DocumentService {
     async getAllDocuments(): Promise<Result<DocumentModel[]>> {
         try {
             const documents = await this.documentRepository.list();
-            return ok(documents.map(documentMapper));
+            return ok(documents);
         } catch (error) {
             if (error instanceof DomainError) {
                 return fail(error.message);

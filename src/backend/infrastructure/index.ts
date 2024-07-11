@@ -1,5 +1,5 @@
 import express from 'express';
-import { documentRouter } from './pdf-document/infrastructure/document.controller';
+import { documentRouter } from '../pdf-document/infrastructure/document.controller';
 
 const app = express();
 
